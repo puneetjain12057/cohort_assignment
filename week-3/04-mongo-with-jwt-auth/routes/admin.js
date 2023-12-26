@@ -1,22 +1,53 @@
+const jwt = require('jsonwebtoken');
+const jwtPassword = 'secret';
 const { Router } = require("express");
 const adminMiddleware = require("../middleware/admin");
 const router = Router();
+const m=require("../db/index");
 
 // Admin Routes
-app.post('/signup', (req, res) => {
+router.post('/signup', (req, res) => {
     // Implement admin signup logic
+    let username=req.body.username
+    let password=req.body.password
+    let obj={username:username,password:password}
+    let admin = new m.Admin(obj);
+    //console.log(admin);
+    admin.save();
+    res.status(201).json({message: "Admin created successfully"})
 });
 
-app.post('/signin', (req, res) => {
+router.post('/signin', (req, res) => {
     // Implement admin signup logic
+    let username=req.body.username
+    let password=req.body.password
+    let token = jwt.sign({username,password},jwtPassword)
+    res.status(201).json({token: token})
+
 });
 
-app.post('/courses', adminMiddleware, (req, res) => {
+router.post('/courses', adminMiddleware, (req, res) => {
     // Implement course creation logic
+    let title=req.body.title
+    let description=req.body.description
+    let price=req.body.price
+    //console.log(price)
+    let imageLink=req.body.imageLink
+    let obj={title:title,description:description,price:price,imageLink:imageLink}
+    //console.log(obj)
+    let course=new m.Course(obj)
+    course.save()
+    //console.log(course._id)
+    res.status(201).json({message: "Course created successfully",courseId:course._id})
 });
 
-app.get('/courses', adminMiddleware, (req, res) => {
+router.get('/courses', adminMiddleware, (req, res) => {
     // Implement fetching all courses logic
+    m.Course
+        .find()
+        .then(courses => {
+            res.json(courses);
+        })
 });
 
 module.exports = router;

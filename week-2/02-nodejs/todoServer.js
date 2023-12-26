@@ -41,9 +41,104 @@
  */
   const express = require('express');
   const bodyParser = require('body-parser');
+  const z = require("zod");
+  const m = require("mongoose");
+const { validate } = require('uuid');
+
+  m.connect("mongodb+srv://puneetjain72635:2ruTqqkujzRdkUOc@cluster0.76tdims.mongodb.net/")
+
+  const Task = m.model('Task', {title: String, description: String});
   
   const app = express();
+  let id =0;
+
+
+  const schema =  z.object({
+    
+    title : z.string(),
+    description: z.string()
+  })
   
-  app.use(bodyParser.json());
+  app.use(express.json());
+
+  app.get("/todos",async(req,res)=>{
+    try{
+      const task = await Task.find();
+   
+      res.status(200).json(task);
+    
+    }catch (error) {
+      console.error('Error fetching tasks:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+    
+  })
   
+  app.get("/todos/:id",async(req,res)=>{
+    try{
+    let id=req.params.id;
+    let task=await Task.findById(id);
+    if(task){
+    res.status(200).json(task);}
+    else{
+      res.status(404);
+    }
+   }catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+  })
+
+  app.post("/todos",async (req,res)=>{
+    let title = req.body.title;
+    let description = req.body.description;
+    //console.log(it);
+    let obj ={title: title,description:description}
+    let response = schema.safeParse(obj)
+    if(response.success){
+      let task = new Task(obj);
+      task.save(); 
+      let task1=await Task.findById(id);
+      res.status(201).json(task1)
+    }
+    else {
+      res.json({
+        msg: "Your input is not valid"
+      })
+    }
+  })
+  
+  app.put("/todos/:id",async(req,res)=>{
+    let id=req.params.id;
+    let title = req.body.title;
+    let description = req.body.description;
+    
+    try {
+      let task = await Task.findByIdAndUpdate(id, { title: title, description: description });
+      if (task) {
+        res.status(200).json({ msg: "done" });
+      } else {
+        res.status(404).json({ msg: "Task not found" });
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+    
+  })
+  app.delete("/todos/:id",async (req,res)=>{
+    let id = req.params.id;
+    try{
+    let deletedTask= await Task.findByIdAndDelete(id);
+    if(deletedTask){
+      res.status(200).json({ msg: "done" });
+    } else {
+      res.status(404).json({ error: "Task not found" });
+    }
+    }catch (error) {
+      console.error('Error updating task:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  //app.listen(3000);
   module.exports = app;
