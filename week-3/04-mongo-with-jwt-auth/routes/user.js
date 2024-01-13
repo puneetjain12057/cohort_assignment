@@ -31,7 +31,11 @@ router.get('/courses', (req, res) => {
         res.json(courses))
 });
 
+<<<<<<< HEAD
 router.post('/courses/:courseId', userMiddleware, async (req, res) => {
+=======
+router.post('/courses/:courseId', userMiddleware, (req, res) => {
+>>>>>>> 081be9ec66420098381ce7ce9e4291ba35ec3658
     // Implement course purchase logic
     let id =req.params.courseId
     await m.Course.findByIdAndUpdate(
